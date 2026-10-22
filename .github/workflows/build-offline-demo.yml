@@ -1,0 +1,118 @@
+name: Build offline prison calculator demo
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-offline-demo.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: short-rfp-style/prison-cost-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: short-rfp-style/prison-cost-app/package-lock.json
+
+      - name: Install app and offline bundling dependencies
+        run: |
+          npm ci
+          npm install --no-save --no-package-lock vite-plugin-singlefile@2.3.4 @fontsource/poppins @fontsource/roboto
+
+      - name: Set up supplied fictional sample data and original assets
+        run: |
+          python3 - <<'PY'
+          import json, base64, re
+          from pathlib import Path
+
+          base = Path('.')
+          source = Path('../sample-cost-rates.json')
+          data = json.loads(source.read_text())
+          assert all(isinstance(data.get(k), list) and data[k] for k in ['outputRates', 'onCostComponents', 'quarterlyIndices'])
+          dest = Path('../.private/original-cost-rates.json')
+          dest.parent.mkdir(exist_ok=True)
+          dest.write_text(json.dumps(data), encoding='utf-8')
+
+          appfile = base/'src/App.tsx'
+          app = appfile.read_text(encoding='utf-8')
+          images = {}
+          for n in range(4, 13):
+              path = base/'public/pic'/f'Houseblocks Layout_{n}.jpg'
+              images[n] = 'data:image/jpeg;base64,'+base64.b64encode(path.read_bytes()).decode()
+          logo = 'data:image/png;base64,'+base64.b64encode((base/'public/kiergroup.png').read_bytes()).decode()
+          entries = ',\n'.join(f'  {k}: {json.dumps(v)}' for k,v in images.items())
+          (base/'src/offlineAssets.ts').write_text(
+              'export const OFFLINE_IMAGES: Record<number,string> = {\n'+entries+'\n};\n'
+              +'export const OFFLINE_LOGO = '+json.dumps(logo)+';\n', encoding='utf-8')
+          pattern = r'const SITE_IMAGES:\s*Record<number,\s*string>\s*=\s*\{.*?\};'
+          app, count = re.subn(pattern, 'const SITE_IMAGES: Record<number, string> = OFFLINE_IMAGES;', app, flags=re.S)
+          assert count == 1, 'Original image map not found'
+          app, count = re.subn('src="/kiergroup.png"', 'src={OFFLINE_LOGO}', app)
+          assert count == 1, 'Original logo reference not found'
+          appfile.write_text("import { OFFLINE_IMAGES, OFFLINE_LOGO } from './offlineAssets';\n"+app, encoding='utf-8')
+
+          mainfile = base/'src/main.tsx'
+          font_imports = '\n'.join(
+              f"import '@fontsource/{family}/latin-{weight}.css';"
+              for family, weights in [('poppins',[400,500,600,700]),('roboto',[400,500,700])]
+              for weight in weights
+          )
+          mainfile.write_text(font_imports+'\n'+mainfile.read_text(encoding='utf-8'), encoding='utf-8')
+
+          htmlfile = base/'index.html'
+          html = htmlfile.read_text(encoding='utf-8')
+          html = re.sub(r'\s*<link\b[^>]*https://fonts\.googleapis\.com[^>]*>', '', html)
+          html = re.sub(r'\s*<link\b[^>]*https://fonts\.gstatic\.com[^>]*>', '', html)
+          icon = base/'public/favicon.svg'
+          if icon.exists():
+              html = html.replace('href="/favicon.svg"', 'href="data:image/svg+xml;base64,'+base64.b64encode(icon.read_bytes()).decode()+'"')
+          htmlfile.write_text(html, encoding='utf-8')
+          (base/'vite.offline.config.ts').write_text(
+              "import { defineConfig } from 'vite';\n"
+              "import react from '@vitejs/plugin-react';\n"
+              "import { viteSingleFile } from 'vite-plugin-singlefile';\n"
+              "export default defineConfig({base:'./',plugins:[react(),viteSingleFile()],"
+              "build:{assetsInlineLimit:100000000,cssCodeSplit:false,sourcemap:false}});\n"
+          )
+          PY
+
+      - name: Build original React app as one HTML file
+        env:
+          RATES_PASSPHRASE: DEMO ONLY - NOT FOR WORK
+        run: |
+          npm run encrypt-rates
+          ./node_modules/.bin/tsc -b
+          ./node_modules/.bin/vite build --config vite.offline.config.ts
+
+      - name: Check standalone output
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          output = Path('dist/index.html')
+          html = output.read_text(encoding='utf-8')
+          assert '<script' in html and '<style' in html
+          assert 'data:image/jpeg;base64,' in html
+          assert 'data:image/png;base64,' in html
+          assert '@font-face' in html
+          assert not re.search(r'<script\b[^>]*\bsrc=', html)
+          assert 'DEMO ONLY - NOT FOR WORK' not in html
+          final = Path('dist/Prison_Cost_Estimator_OFFLINE_DEMO.html')
+          output.rename(final)
+          print('Offline HTML ready:', final, final.stat().st_size, 'bytes')
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Prison_Cost_Estimator_OFFLINE_DEMO
+          path: short-rfp-style/prison-cost-app/dist/Prison_Cost_Estimator_OFFLINE_DEMO.html
+          retention-days: 30
