@@ -1,0 +1,39 @@
+name: Build private-ready offline application
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: short-rfp-style/prison-cost-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install build dependencies
+        run: |
+          npm ci
+          npm install --no-save --no-package-lock vite-plugin-singlefile@2.3.4 @fontsource/poppins @fontsource/roboto
+      - name: Prepare original app without private data
+        run: python3 ../../offline-tools/prepare-blank-build.py
+      - name: Compile original React app
+        run: |
+          ./node_modules/.bin/tsc -b
+          ./node_modules/.bin/vite build --config vite.offline.config.ts
+      - name: Verify and package
+        run: |
+          python3 ../../offline-tools/verify-and-name-template.py
+          cp ../../offline-tools/Prison_Cost_Estimator_LOCAL_PACKAGER.html dist/
+          cp ../../offline-tools/README_PRIVATE_OFFLINE.txt dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Prison_Cost_Estimator_PRIVATE_READY
+          path: |
+            short-rfp-style/prison-cost-app/dist/Prison_Cost_Estimator_BLANK_TEMPLATE.html
+            short-rfp-style/prison-cost-app/dist/Prison_Cost_Estimator_LOCAL_PACKAGER.html
+            short-rfp-style/prison-cost-app/dist/README_PRIVATE_OFFLINE.txt
+          retention-days: 30
