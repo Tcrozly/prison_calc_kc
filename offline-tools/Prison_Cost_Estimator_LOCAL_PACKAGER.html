@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prison Cost Estimator - Private Offline Packager</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #243744; background: #f2f6f7; line-height: 1.5; }
+    header { background: #002638; color: white; padding: 26px 22px; }
+    .container { max-width: 820px; margin: 0 auto; }
+    h1 { font-size: 1.55rem; margin: 0 0 8px; }
+    .sub { margin: 0; color: #deecf0; }
+    main { padding: 24px 18px 56px; }
+    section { background: #fff; padding: 24px; margin-bottom: 18px; border: 1px solid #d8e2e6; border-radius: 8px; }
+    h2 { font-size: 1.15rem; margin: 0 0 10px; }
+    p { margin: 6px 0 14px; }
+    .small { font-size: .9rem; color: #526571; }
+    .notice { border-left: 4px solid #007c88; background: #eaf6f7; padding: 12px 15px; border-radius: 3px; margin: 18px 0; }
+    label { display: block; font-weight: 650; margin: 18px 0 5px; }
+    input[type=file], input[type=password] { display: block; width: 100%; max-width: 100%; border: 1px solid #a7bbc5; background: white; border-radius: 5px; padding: 10px; font: inherit; }
+    input:focus, button:focus, a:focus { outline: 3px solid #41b2c0; outline-offset: 2px; }
+    button { background: #007c88; color: white; border: 0; border-radius: 5px; padding: 13px 18px; font: 650 1rem system-ui,sans-serif; cursor: pointer; }
+    button:hover { background: #005e6b; }
+    button:disabled { background: #90a6ae; cursor: wait; }
+    button.secondary { background: #516671; margin-left: 6px; }
+    .buttons { margin-top: 23px; }
+    .status { border-left: 4px solid #738592; padding: 10px 14px; margin-top: 18px; background: #f0f5f7; overflow-wrap: anywhere; }
+    .status.error { border-color: #bd3737; background: #fff1f0; }
+    .status.success { border-color: #19815e; background: #ecf9f3; }
+    .hidden { display: none; }
+    a { color: #006873; }
+    code { background: #eff3f4; padding: 1px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <header><div class="container"><h1>Prison Cost Estimator - private data packager</h1><p class="sub">Add your real cost rates to the original offline application, without uploading them to GitHub.</p></div></header>
+  <main class="container">
+    <section>
+      <h2>How this works</h2>
+      <p>GitHub produces a <strong>blank, self-contained React application</strong>. This packager reads your JSON file on this computer, encrypts it with a passphrase you choose, and inserts the encrypted rates into the blank application.</p>
+      <div class="notice"><strong>Local-only processing:</strong> This page uses no external scripts, services or network requests. Your JSON and passphrase are not uploaded to GitHub or to this chat. Keep the finished HTML file and passphrase secure.</div>
+      <p class="small">Open both this packager and the blank template from the ZIP you downloaded from GitHub Actions. No Node.js, software installation or hosting is needed.</p>
+    </section>
+    <section>
+      <h2>Create your finished application</h2>
+      <label for="template">1. Select the GitHub-built blank HTML template</label>
+      <input type="file" id="template" accept=".html,text/html">
+      <label for="rates">2. Select your private <code>original-cost-rates.json</code></label>
+      <input type="file" id="rates" accept=".json,application/json">
+      <label for="passphrase">3. Create an application unlock passphrase (minimum 12 characters)</label>
+      <input type="password" id="passphrase" autocomplete="new-password" spellcheck="false">
+      <label for="confirmation">4. Confirm the passphrase</label>
+      <input type="password" id="confirmation" autocomplete="new-password" spellcheck="false">
+      <div class="buttons">
+        <button id="make" type="button">Encrypt and create offline HTML</button>
+        <button id="clear" type="button" class="secondary">Clear selections</button>
+      </div>
+      <div id="status" class="status" role="status" aria-live="polite">Select the two files and enter a passphrase to begin.</div>
+      <p id="downloadRow" class="hidden"><strong>Finished file:</strong> <a id="download" download="Prison_Cost_Estimator_OFFLINE_PRIVATE.html" href="#">Download the encrypted standalone HTML</a></p>
+      <p class="small">For privacy, this tool clears its selected JSON file and passphrase fields after packaging. It <strong>does not delete your original JSON file from your computer</strong>; you control whether to retain or securely dispose of that original according to company policy. Closing the page releases its working data, although browser memory cannot be guaranteed to be securely erased.</p>
+    </section>
+    <section>
+      <h2>Using and sharing the HTML</h2>
+      <p>Double-click the finished <code>Prison_Cost_Estimator_OFFLINE_PRIVATE.html</code>, open it in Edge or Chrome and enter the passphrase you created. Check the calculations and original site images, then share the file through an approved Teams location. Share the passphrase separately with authorised colleagues.</p>
+      <p class="small"><strong>Access limitation:</strong> anyone with the HTML file and its passphrase can decrypt the commercial rates. This is file encryption, not centrally managed access control. You cannot revoke copies already downloaded.</p>
+    </section>
+  </main>
+  <script>
+  (() => {
+    'use strict';
+    const MARKERS = Object.freeze({
+      salt: 'KC_LOCAL_RATE_SALT_MARKER_83c2fae14b_V1',
+      iv: 'KC_LOCAL_RATE_IV_MARKER_83c2fae14b_V1',
+      ciphertext: 'KC_LOCAL_RATE_CIPHERTEXT_MARKER_83c2fae14b_V1'
+    });
+    const el = id => document.getElementById(id);
+    const status = el('status');
+    const make = el('make');
+    const save = el('download');
+    let downloadUrl = null;
+
+    function show(message, cls = '') {
+      status.textContent = message;
+      status.className = 'status' + (cls ? ' ' + cls : '');
+    }
+    function clearInputs() {
+      el('template').value = '';
+      el('rates').value = '';
+      el('passphrase').value = '';
+      el('confirmation').value = '';
+    }
+    function clearDownload() {
+      el('downloadRow').classList.add('hidden');
+      save.removeAttribute('href');
+      if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+      downloadUrl = null;
+    }
+    el('clear').addEventListener('click', () => {
+      clearInputs(); clearDownload(); show('Selections cleared. The original file on your computer has not been deleted.');
+    });
+    function arrayToBase64(input) {
+      const arr = input instanceof Uint8Array ? input : new Uint8Array(input);
+      const step = 0x8000;
+      const parts = [];
+      for (let i = 0; i < arr.length; i += step)
+        parts.push(String.fromCharCode.apply(null, arr.subarray(i, i + step)));
+      return btoa(parts.join(''));
+    }
+    function validateBundle(bundle) {
+      if (!bundle || typeof bundle !== 'object' || Array.isArray(bundle))
+        throw new Error('The JSON must contain an object with rate arrays.');
+      for (const key of ['outputRates', 'onCostComponents', 'quarterlyIndices']) {
+        if (!Array.isArray(bundle[key]) || !bundle[key].length)
+          throw new Error('Missing or empty JSON array: ' + key);
+      }
+      for (const rate of bundle.outputRates) {
+        if (typeof rate.description !== 'string' || typeof rate.ratePerM2 !== 'number' || !Number.isFinite(rate.ratePerM2) ||
+            typeof rate.applyOnCost !== 'boolean' || typeof rate.applyIndex !== 'boolean')
+          throw new Error('outputRates must contain description, ratePerM2, applyOnCost and applyIndex.');
+      }
+      for (const item of bundle.onCostComponents) {
+        if (typeof item.description !== 'string' || typeof item.ratePerM2 !== 'number' || !Number.isFinite(item.ratePerM2))
+          throw new Error('onCostComponents must contain description and ratePerM2.');
+      }
+      for (const item of bundle.quarterlyIndices) {
+        if (typeof item.quarter !== 'string' || typeof item.index !== 'number' || !Number.isFinite(item.index) || item.index <= 0)
+          throw new Error('quarterlyIndices must contain quarter and positive numeric index.');
+      }
+      if (bundle.benchmarkQuarter && !bundle.quarterlyIndices.some(item => item.quarter === bundle.benchmarkQuarter))
+        throw new Error('The benchmarkQuarter must exist in quarterlyIndices.');
+      return Object.fromEntries(Object.entries(bundle).filter(([key]) => !key.startsWith('_')));
+    }
+    function replaceExactlyOnce(html, token, value) {
+      const pos = html.indexOf(token);
+      if (pos === -1 || html.indexOf(token, pos + 1) !== -1)
+        throw new Error('Blank template is incompatible (missing or duplicate encryption marker). Download a fresh packager and blank template from the same build.');
+      return html.slice(0, pos) + value + html.slice(pos + token.length);
+    }
+    async function generate() {
+      clearDownload();
+      make.disabled = true;
+      let pass = '';
+      try {
+        if (!crypto || !crypto.subtle || !crypto.getRandomValues)
+          throw new Error('Browser encryption is unavailable. Try a recent Edge or Chrome browser opening this file locally.');
+        const templateFile = el('template').files[0];
+        const ratesFile = el('rates').files[0];
+        if (!templateFile || !ratesFile) throw new Error('Select both the blank template HTML and JSON file.');
+        pass = el('passphrase').value;
+        if (pass.length < 12) throw new Error('Choose a passphrase at least 12 characters long.');
+        if (pass !== el('confirmation').value) throw new Error('The two passphrases do not match.');
+        show('Reading the two selected files locally and encrypting rates…');
+        const [template, rawJson] = await Promise.all([templateFile.text(), ratesFile.text()]);
+        if (!template.includes(MARKERS.salt) || !template.includes(MARKERS.iv) || !template.includes(MARKERS.ciphertext))
+          throw new Error('This is not the blank offline HTML template produced by the private-ready GitHub workflow.');
+        const data = validateBundle(JSON.parse(rawJson));
+        const plaintext = new TextEncoder().encode(JSON.stringify(data));
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+        const key = await crypto.subtle.deriveKey(
+          {name:'PBKDF2',salt,iterations:100000,hash:'SHA-256'},
+          keyMaterial, {name:'AES-GCM',length:256}, false, ['encrypt']);
+        const ciphertext = new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv}, key, plaintext));
+        let finished = replaceExactlyOnce(template, MARKERS.salt, arrayToBase64(salt));
+        finished = replaceExactlyOnce(finished, MARKERS.iv, arrayToBase64(iv));
+        finished = replaceExactlyOnce(finished, MARKERS.ciphertext, arrayToBase64(ciphertext));
+        downloadUrl = URL.createObjectURL(new Blob([finished], {type:'text/html;charset=utf-8'}));
+        save.href = downloadUrl;
+        el('downloadRow').classList.remove('hidden');
+        clearInputs();
+        show('Success. The finished HTML is ready to download. Your original JSON was not sent to GitHub or any server.', 'success');
+        save.click();
+      } catch (err) {
+        show('Could not create the application: ' + (err && err.message ? err.message : String(err)), 'error');
+      } finally {
+        pass = '';
+        make.disabled = false;
+      }
+    }
+    make.addEventListener('click', generate);
+    window.addEventListener('pagehide', () => { if(downloadUrl) URL.revokeObjectURL(downloadUrl); });
+  })();
+  </script>
+</body>
+</html>
