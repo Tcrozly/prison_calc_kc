@@ -1,0 +1,273 @@
+{
+  "_exampleOnly": "SYNTHETIC TEST DATA ONLY. All cost rates and indices are fictional and MUST NOT be used for real estimates.",
+  "_purpose": "For validating GitHub Actions offline build and app UI only.",
+  "benchmarkQuarter": "Q2 (2023)",
+  "outputRates": [
+    {
+      "description": "Illustrative structure rate (DEMO)",
+      "ratePerM2": 2900,
+      "applyOnCost": true,
+      "applyIndex": true
+    },
+    {
+      "description": "Illustrative mechanical and electrical (DEMO)",
+      "ratePerM2": 1850,
+      "applyOnCost": true,
+      "applyIndex": true
+    },
+    {
+      "description": "Illustrative external works (DEMO)",
+      "ratePerM2": 960,
+      "applyOnCost": true,
+      "applyIndex": true
+    },
+    {
+      "description": "Illustrative other allowances (DEMO)",
+      "ratePerM2": 320,
+      "applyOnCost": false,
+      "applyIndex": false
+    },
+    {
+      "description": "Excluded rate (DEMO)",
+      "ratePerM2": 0,
+      "applyOnCost": false,
+      "applyIndex": false
+    }
+  ],
+  "onCostComponents": [
+    {
+      "description": "Illustrative preliminaries (DEMO)",
+      "ratePerM2": 375
+    },
+    {
+      "description": "Illustrative professional fees (DEMO)",
+      "ratePerM2": 250
+    }
+  ],
+  "quarterlyIndices": [
+    {
+      "quarter": "Q1 (2023)",
+      "index": 98.3
+    },
+    {
+      "quarter": "Q2 (2023)",
+      "index": 100
+    },
+    {
+      "quarter": "Q3 (2023)",
+      "index": 101.7
+    },
+    {
+      "quarter": "Q4 (2023)",
+      "index": 103.4
+    },
+    {
+      "quarter": "Q1 (2024)",
+      "index": 105.1
+    },
+    {
+      "quarter": "Q2 (2024)",
+      "index": 106.8
+    },
+    {
+      "quarter": "Q3 (2024)",
+      "index": 108.5
+    },
+    {
+      "quarter": "Q4 (2024)",
+      "index": 110.2
+    },
+    {
+      "quarter": "Q1 (2025)",
+      "index": 111.9
+    },
+    {
+      "quarter": "Q2 (2025)",
+      "index": 113.6
+    },
+    {
+      "quarter": "Q3 (2025)",
+      "index": 115.3
+    },
+    {
+      "quarter": "Q4 (2025)",
+      "index": 117
+    },
+    {
+      "quarter": "Q1 (2026)",
+      "index": 118.7
+    },
+    {
+      "quarter": "Q2 (2026)",
+      "index": 120.4
+    },
+    {
+      "quarter": "Q3 (2026)",
+      "index": 122.1
+    },
+    {
+      "quarter": "Q4 (2026)",
+      "index": 123.8
+    },
+    {
+      "quarter": "Q1 (2027)",
+      "index": 125.5
+    },
+    {
+      "quarter": "Q2 (2027)",
+      "index": 127.2
+    },
+    {
+      "quarter": "Q3 (2027)",
+      "index": 128.9
+    },
+    {
+      "quarter": "Q4 (2027)",
+      "index": 130.6
+    },
+    {
+      "quarter": "Q1 (2028)",
+      "index": 132.3
+    },
+    {
+      "quarter": "Q2 (2028)",
+      "index": 134
+    },
+    {
+      "quarter": "Q3 (2028)",
+      "index": 135.7
+    },
+    {
+      "quarter": "Q4 (2028)",
+      "index": 137.4
+    },
+    {
+      "quarter": "Q1 (2029)",
+      "index": 139.1
+    },
+    {
+      "quarter": "Q2 (2029)",
+      "index": 140.8
+    },
+    {
+      "quarter": "Q3 (2029)",
+      "index": 142.5
+    },
+    {
+      "quarter": "Q4 (2029)",
+      "index": 144.2
+    },
+    {
+      "quarter": "Q1 (2030)",
+      "index": 145.9
+    },
+    {
+      "quarter": "Q2 (2030)",
+      "index": 147.6
+    },
+    {
+      "quarter": "Q3 (2030)",
+      "index": 149.3
+    },
+    {
+      "quarter": "Q4 (2030)",
+      "index": 151
+    },
+    {
+      "quarter": "Q1 (2031)",
+      "index": 152.7
+    },
+    {
+      "quarter": "Q2 (2031)",
+      "index": 154.4
+    },
+    {
+      "quarter": "Q3 (2031)",
+      "index": 156.1
+    },
+    {
+      "quarter": "Q4 (2031)",
+      "index": 157.8
+    },
+    {
+      "quarter": "Q1 (2032)",
+      "index": 159.5
+    },
+    {
+      "quarter": "Q2 (2032)",
+      "index": 161.2
+    },
+    {
+      "quarter": "Q3 (2032)",
+      "index": 162.9
+    },
+    {
+      "quarter": "Q4 (2032)",
+      "index": 164.6
+    },
+    {
+      "quarter": "Q1 (2033)",
+      "index": 166.3
+    },
+    {
+      "quarter": "Q2 (2033)",
+      "index": 168
+    },
+    {
+      "quarter": "Q3 (2033)",
+      "index": 169.7
+    },
+    {
+      "quarter": "Q4 (2033)",
+      "index": 171.4
+    },
+    {
+      "quarter": "Q1 (2034)",
+      "index": 173.1
+    },
+    {
+      "quarter": "Q2 (2034)",
+      "index": 174.8
+    },
+    {
+      "quarter": "Q3 (2034)",
+      "index": 176.5
+    },
+    {
+      "quarter": "Q4 (2034)",
+      "index": 178.2
+    },
+    {
+      "quarter": "Q1 (2035)",
+      "index": 179.9
+    },
+    {
+      "quarter": "Q2 (2035)",
+      "index": 181.6
+    },
+    {
+      "quarter": "Q3 (2035)",
+      "index": 183.3
+    },
+    {
+      "quarter": "Q4 (2035)",
+      "index": 185
+    },
+    {
+      "quarter": "Q1 (2036)",
+      "index": 186.7
+    },
+    {
+      "quarter": "Q2 (2036)",
+      "index": 188.4
+    },
+    {
+      "quarter": "Q3 (2036)",
+      "index": 190.1
+    },
+    {
+      "quarter": "Q4 (2036)",
+      "index": 191.8
+    }
+  ]
+}
